@@ -9,65 +9,49 @@
 #include <limits>
 #include <fstream>
 #include <cstdlib>
-
 using namespace std;
 
-// --- Constants and Global Settings ---
+
 const double TICKET_PRICE_STANDARD = 250.00;
 const double TICKET_PRICE_PREMIUM = 450.00;
 const string APP_NAME = "CineSphere Booking Console";
 const string LINE_SEPARATOR = string(70, '-');
-const string BOOKING_DATA_FILE = "bookings.txt"; // File for persistence
+const string BOOKING_DATA_FILE = "bookings.txt"; 
 
-// --- Helper Functions for Formatting and User Input ---
 
-/**
- * @brief Prints a formatted header for application sections.
- * @param title The title of the section.
- */
 void printHeader(const string& title) {
     cout << "\n" << string(10, '=') << " " << title << " " << string(10, '=') << endl;
 }
 
-/**
- * @brief Handles integer input from the user with validation.
- * @param prompt The message to display to the user.
- * @return The validated integer input.
- */
+
 int getValidatedIntInput(const string& prompt) {
     int input;
     while (true) {
         cout << prompt;
         if (cin >> input) {
-            // Check if there's any garbage left in the buffer (e.g., "12a")
+           
             if (cin.peek() == '\n') {
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 return input;
             }
         }
-        // If input failed or garbage was found
+      
         cout << "Invalid input. Please enter a valid number." << endl;
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
 
-/**
- * @brief Formats currency for display.
- * @param amount The monetary value.
- * @return A string representation of the currency.
- */
+
 string formatCurrency(double amount) {
     stringstream ss;
     ss << fixed << setprecision(2) << amount;
     return ss.str();
 }
 
-/**
- * @brief Clears the console screen.
- */
+
 void clearScreen() {
-    // Platform-independent way to attempt screen clearing
+    
     #ifdef _WIN32
         system("cls");
     #else
@@ -75,17 +59,15 @@ void clearScreen() {
     #endif
 }
 
-// --- 1. OOP Core Classes ---
 
-// --- 1.1 MenuItem Class (For Food & Beverages) ---
 class MenuItem {
 private:
     string name;
     double price;
-    string category; // E.g., Popcorn, Beverage, Snack
+    string category; 
 
 public:
-    // Constructor
+    
     MenuItem(string n, double p, string c) 
         : name(n), price(p), category(c) {}
 
@@ -94,9 +76,7 @@ public:
     double getPrice() const { return price; }
     string getCategory() const { return category; }
 
-    /**
-     * @brief Displays the menu item details for selection.
-     */
+   
     void displayItem(int index) const {
         cout << "  [" << index << "] " << left << setw(30) << name 
              << " - " << left << setw(10) << category 
@@ -105,22 +85,21 @@ public:
 };
 
 
-// --- 1.2 Seat Class ---
+
 class Seat {
 public:
     enum Status { AVAILABLE, BOOKED, SELECTED };
     enum Type { STANDARD, PREMIUM };
 
 private:
-    string seatId; // E.g., "A5", "P2"
+    string seatId; 
     Status status;
     Type type;
 
 public:
-    // Constructor
+   
     Seat(string id, Type t) : seatId(id), status(AVAILABLE), type(t) {}
 
-    // Getters
     string getId() const { return seatId; }
     Status getStatus() const { return status; }
     Type getType() const { return type; }
@@ -131,30 +110,24 @@ public:
         return "AVAILABLE";
     }
 
-    /**
-     * @brief Mutator method to change status.
-     * @param newStatus The new status to set.
-     */
+    
     void setStatus(Status newStatus) {
         status = newStatus;
     }
 
-    /**
-     * @brief Displays the seat status visually.
-     */
+  
     void displaySeat() const {
         string displayChar = (type == PREMIUM ? "P" : "S");
         if (status == BOOKED) {
-            displayChar = "X"; // Booked
+            displayChar = "X"; 
         } else if (status == SELECTED) {
-            displayChar = "V"; // Selected (V for Voted/Selected)
+            displayChar = "V"; 
         }
         cout << "[" << displayChar << setw(4) << right << seatId << "]";
     }
 };
 
 
-// --- 1.3 Movie Class ---
 class Movie {
 private:
     string title;
@@ -175,21 +148,19 @@ public:
 };
 
 
-// --- 1.4 Theater Class (Composition: A theater HAS a menu and HAS a seat map) ---
+
 class Theater {
 private:
     string name;
     string city;
     string state;
     vector<MenuItem> menu;
-    vector<vector<Seat>> seatMap; // 2D vector for seat arrangement
+    vector<vector<Seat>> seatMap; 
 
-    /**
-     * @brief Internal method to initialize the seat map (rows and columns).
-     */
+   
     void initializeSeatMap(int standardRows, int premiumRows, int seatsPerRow) {
         char currentRow = 'A';
-        // 1. Premium Seats
+       
         for (int r = 0; r < premiumRows; ++r) {
             vector<Seat> row;
             for (int c = 1; c <= seatsPerRow; ++c) {
@@ -200,7 +171,7 @@ private:
             currentRow++;
         }
 
-        // 2. Standard Seats
+       
         for (int r = 0; r < standardRows; ++r) {
             vector<Seat> row;
             for (int c = 1; c <= seatsPerRow; ++c) {
@@ -212,9 +183,7 @@ private:
         }
     }
     
-    /**
-     * @brief Internal method to initialize the menu.
-     */
+    
     void initializeMenu() {
         menu.emplace_back("Caramel Popcorn (Large)", 350.00, "Popcorn");
         menu.emplace_back("Salty Popcorn (Medium)", 250.00, "Popcorn");
@@ -225,14 +194,14 @@ private:
     }
 
 public:
-    // Constructor
+    
     Theater(string n, string c, string s, int stdRows, int premRows, int seatsPer)
         : name(n), city(c), state(s) {
         initializeSeatMap(stdRows, premRows, seatsPer);
         initializeMenu();
     }
 
-    // Getters
+
     string getName() const { return name; }
     string getCity() const { return city; }
     string getState() const { return state; }
@@ -246,14 +215,14 @@ public:
 };
 
 
-// --- 1.5 Showtime Class (Association: Showtime has a Movie and a Theater) ---
+
 class Showtime {
 private:
-    const Movie& movie;     // Reference to the Movie object
-    Theater& theater;       // Reference to the Theater object
-    string time;            // E.g., "10:00 AM", "06:30 PM"
-    string date;            // E.g., "2025-12-15"
-    // Unique ID combining Theater, Date, and Time for persistence lookup
+    const Movie& movie;
+    Theater& theater;      
+    string time;            
+    string date;            
+    
     string uniqueShowId; 
 
     string createUniqueId() const {
@@ -261,13 +230,13 @@ private:
     }
 
 public:
-    // Constructor
+  
     Showtime(const Movie& m, Theater& t, string tm, string d)
         : movie(m), theater(t), time(tm), date(d) {
             uniqueShowId = createUniqueId();
         }
 
-    // Getters
+    
     const Movie& getMovie() const { return movie; }
     Theater& getTheater() const { return theater; }
     string getTime() const { return time; }
@@ -283,25 +252,23 @@ public:
 };
 
 
-// --- 1.6 FoodOrder Class ---
+
 class FoodOrder {
 private:
-    map<string, pair<int, double>> orderItems; // <ItemName, <Quantity, PricePerItem>>
+    map<string, pair<int, double>> orderItems; 
     double totalFoodPrice = 0.0;
 
 public:
-    /**
-     * @brief Adds or updates a menu item in the order.
-     */
+   
     void addItem(const MenuItem& item, int quantity) {
         if (quantity <= 0) return;
 
-        // If the item already exists in the order
+        
         if (orderItems.count(item.getName())) {
             int currentQty = orderItems[item.getName()].first;
             orderItems[item.getName()].first = currentQty + quantity;
         } else {
-            // New item
+            
             orderItems[item.getName()] = {quantity, item.getPrice()};
         }
         totalFoodPrice += item.getPrice() * quantity;
@@ -315,9 +282,7 @@ public:
         return orderItems.empty();
     }
 
-    /**
-     * @brief Displays the consolidated food order.
-     */
+   
     void displayOrder() const {
         cout << "\n    --- Food Order Details ---" << endl;
         if (isEmpty()) {
@@ -340,21 +305,19 @@ public:
 };
 
 
-// --- 1.7 Booking Class (The final transaction record) ---
+
 class Booking {
 private:
     static int nextBookingId;
     int bookingId;
-    // FIX: Changed reference to pointer to allow vector operations
+   
     const Showtime* showtimePtr; 
     vector<string> bookedSeatIds;
-    FoodOrder foodOrder; // FoodOrder is copied into the booking
+    FoodOrder foodOrder; 
     double ticketTotal;
     double grandTotal;
 
-    /**
-     * @brief Calculates the total price of the tickets based on seat type.
-     */
+ 
     void calculateTicketTotal(Theater& theater) {
         ticketTotal = 0.0;
         const auto& seatMap = theater.getConstSeatMap();
@@ -364,7 +327,7 @@ private:
                 for (const auto& seat : row) {
                     if (seat.getId() == seatId) {
                         ticketTotal += seat.getPrice();
-                        goto seat_found; // Jump out of nested loops once found
+                        goto seat_found; 
                     }
                 }
             }
@@ -374,33 +337,30 @@ private:
     }
 
 public:
-    // Constructor (Booking) - Accepts reference, stores address
+  
     Booking(const Showtime& s, const vector<string>& seats, const FoodOrder& order)
         : showtimePtr(&s), bookedSeatIds(seats), foodOrder(order) {
         bookingId = nextBookingId++;
         calculateTicketTotal(s.getTheater());
     }
     
-    // Constructor for loading from file (minimal data) - Accepts reference, stores address
+   
     Booking(int id, const Showtime& s, const vector<string>& seats)
         : showtimePtr(&s), bookedSeatIds(seats), foodOrder({}) {
         bookingId = id;
-        calculateTicketTotal(s.getTheater()); // Recalculate based on seat prices
-        // Ensure the static counter is ahead of any loaded ID
+        calculateTicketTotal(s.getTheater()); 
+       
         if (id >= nextBookingId) {
             nextBookingId = id + 1;
         }
     }
 
-    // Getters
+  
     int getId() const { return bookingId; }
-    // FIX: Returns the dereferenced pointer
+  
     const Showtime& getShowtime() const { return *showtimePtr; } 
     const vector<string>& getBookedSeatIds() const { return bookedSeatIds; }
 
-    /**
-     * @brief Generates the final bill and confirmation.
-     */
     void generateBill() const {
         printHeader("BOOKING CONFIRMATION & BILL");
         cout << "Reference ID: " << bookingId << endl;
@@ -413,7 +373,7 @@ public:
         cout << left << setw(20) << "Show Time:" << getShowtime().getDate() << " at " << getShowtime().getTime() << endl;
         cout << LINE_SEPARATOR << endl;
 
-        // Ticket Details
+       
         cout << "Ticket Details:" << endl;
         cout << "  Seats Reserved (" << bookedSeatIds.size() << "): ";
         for (size_t i = 0; i < bookedSeatIds.size(); ++i) {
@@ -422,19 +382,17 @@ public:
         cout << endl;
         cout << left << setw(20) << "  Ticket Subtotal:" << "Rs " << formatCurrency(ticketTotal) << endl;
         
-        // Food Details
+       
         foodOrder.displayOrder();
 
-        // Grand Total
+       
         cout << LINE_SEPARATOR << endl;
         cout << ">> " << left << setw(20) << "GRAND TOTAL:" << "Rs " << formatCurrency(grandTotal) << endl;
         cout << LINE_SEPARATOR << endl;
         cout << "Enjoy your movie! Seats are confirmed." << endl;
     }
 
-    /**
-     * @brief Reverses the seat statuses for cancellation.
-     */
+    
     void cancel() const {
         Theater& theater = getShowtime().getTheater();
         auto& seatMap = theater.getSeatMap();
@@ -451,10 +409,7 @@ public:
         }
     }
 
-    /**
-     * @brief Helper to format booking data for saving to file.
-     * Format: BookingID|ShowtimeUniqueID|SeatID1,SeatID2,...
-     */
+ 
     string toFileString() const {
         string seatList;
         for (size_t i = 0; i < bookedSeatIds.size(); ++i) {
@@ -466,9 +421,7 @@ public:
         return to_string(bookingId) + "|" + getShowtime().getUniqueShowId() + "|" + seatList;
     }
 
-    /**
-     * @brief Displays brief details for cancellation/lookup.
-     */
+    
     void displayBriefDetails() const {
         cout << "  [ID: " << bookingId << "] " 
              << getShowtime().getMovie().getTitle() 
@@ -482,27 +435,25 @@ public:
         cout << endl;
     }
 };
-// Initialize static member
+
 int Booking::nextBookingId = 5001;
 
 
-// --- 2. SystemManager Class (The orchestrator of the entire application) ---
+
 class SystemManager {
 private:
-    // Core data structures (The 'database' of the application)
+    
     vector<Movie> movies;
     vector<Theater> theaters;
     vector<Showtime> showtimes;
-    vector<Booking> allBookings; // New: To store all successful bookings
+    vector<Booking> allBookings; 
     
-    // Expanded list of states
+   
     vector<string> states = {"Maharashtra", "Karnataka", "Delhi", "Tamil Nadu", "West Bengal", "Gujarat", "Uttar Pradesh"};
 
-    /**
-     * @brief Populates initial data for the system.
-     */
+  
     void initializeData() {
-        // --- Movies (Expanded to 6 movies) ---
+       
         movies.emplace_back("The AI Architect", "Sci-Fi/Action", 145);
         movies.emplace_back("Eternal Sun", "Romantic Drama", 120);
         movies.emplace_back("Rogue Agent 7", "Spy Thriller", 130);
@@ -510,89 +461,81 @@ private:
         movies.emplace_back("Desert Storm", "War Epic", 160);       
         movies.emplace_back("The Last Voyage", "Mystery", 110);    
         
-        // --- Theaters (StandardRows, PremiumRows, SeatsPerRow) ---
+       
+        theaters.emplace_back("PVR Phoenix", "Mumbai", "Maharashtra", 6, 4, 10); 
+        theaters.emplace_back("Cinepolis Amanora", "Pune", "Maharashtra", 5, 5, 8); 
+        theaters.emplace_back("INOX Empress", "Nagpur", "Maharashtra", 7, 3, 12); 
         
-        // 1. Maharashtra (Mumbai, Pune, Nagpur)
-        theaters.emplace_back("PVR Phoenix", "Mumbai", "Maharashtra", 6, 4, 10); // 0
-        theaters.emplace_back("Cinepolis Amanora", "Pune", "Maharashtra", 5, 5, 8); // 1
-        theaters.emplace_back("INOX Empress", "Nagpur", "Maharashtra", 7, 3, 12); // 2
+       
+        theaters.emplace_back("Gopalan Cinemas", "Bangalore", "Karnataka", 5, 5, 10); 
+        theaters.emplace_back("PVR Orion Mall", "Mysore", "Karnataka", 4, 6, 9); 
         
-        // 2. Karnataka (Bangalore, Mysore)
-        theaters.emplace_back("Gopalan Cinemas", "Bangalore", "Karnataka", 5, 5, 10); // 3
-        theaters.emplace_back("PVR Orion Mall", "Mysore", "Karnataka", 4, 6, 9); // 4
-        
-        // 3. Delhi NCR (New Delhi, Gurugram, Noida)
-        theaters.emplace_back("Wave Cinemas", "New Delhi", "Delhi", 5, 5, 10); // 5
-        theaters.emplace_back("PVR Ambience", "Gurugram", "Delhi", 6, 4, 11); // 6
-        theaters.emplace_back("INOX Mall", "Noida", "Delhi", 7, 3, 9); // 7
+        theaters.emplace_back("Wave Cinemas", "New Delhi", "Delhi", 5, 5, 10); 
+        theaters.emplace_back("PVR Ambience", "Gurugram", "Delhi", 6, 4, 11); 
+        theaters.emplace_back("INOX Mall", "Noida", "Delhi", 7, 3, 9); 
 
-        // 4. Tamil Nadu (Chennai, Coimbatore)
-        theaters.emplace_back("Jazz Cinemas", "Chennai", "Tamil Nadu", 5, 5, 11); // 8
-        theaters.emplace_back("Brookfield Mall", "Coimbatore", "Tamil Nadu", 6, 4, 9); // 9
         
-        // 5. West Bengal (Kolkata, Siliguri)
-        theaters.emplace_back("Inox South City", "Kolkata", "West Bengal", 7, 3, 10); // 10
-        theaters.emplace_back("PVR City Centre", "Siliguri", "West Bengal", 5, 5, 8); // 11
+        theaters.emplace_back("Jazz Cinemas", "Chennai", "Tamil Nadu", 5, 5, 11); 
+        theaters.emplace_back("Brookfield Mall", "Coimbatore", "Tamil Nadu", 6, 4, 9); 
+        
+      
+        theaters.emplace_back("Inox South City", "Kolkata", "West Bengal", 7, 3, 10); 
+        theaters.emplace_back("PVR City Centre", "Siliguri", "West Bengal", 5, 5, 8); 
 
-        // 6. Gujarat (Ahmedabad, Surat, Vadodara)
-        theaters.emplace_back("PVR Acropolis", "Ahmedabad", "Gujarat", 6, 4, 10); // 12
-        theaters.emplace_back("Cinepolis VR", "Surat", "Gujarat", 5, 5, 12); // 13
-        theaters.emplace_back("Inox Inorbit", "Vadodara", "Gujarat", 4, 6, 9); // 14
         
-        // 7. Uttar Pradesh (Lucknow, Kanpur, Agra)
-        theaters.emplace_back("Wave Mall", "Lucknow", "Uttar Pradesh", 7, 3, 10); // 15
-        theaters.emplace_back("PVR Rave 3", "Kanpur", "Uttar Pradesh", 5, 5, 11); // 16
-        theaters.emplace_back("INOX Pacific", "Agra", "Uttar Pradesh", 6, 4, 8); // 17
+        theaters.emplace_back("PVR Acropolis", "Ahmedabad", "Gujarat", 6, 4, 10); 
+        theaters.emplace_back("Cinepolis VR", "Surat", "Gujarat", 5, 5, 12); 
+        theaters.emplace_back("Inox Inorbit", "Vadodara", "Gujarat", 4, 6, 9); 
+        
+     
+        theaters.emplace_back("Wave Mall", "Lucknow", "Uttar Pradesh", 7, 3, 10); 
+        theaters.emplace_back("PVR Rave 3", "Kanpur", "Uttar Pradesh", 5, 5, 11); 
+        theaters.emplace_back("INOX Pacific", "Agra", "Uttar Pradesh", 6, 4, 8); 
 
-        // --- Showtimes (Distributed across all new theaters) ---
+  
         
-        // Maharashtra
-        showtimes.emplace_back(movies[0], theaters[0], "10:30 AM", "2025-12-15"); // Mumbai
+      
+        showtimes.emplace_back(movies[0], theaters[0], "10:30 AM", "2025-12-15"); 
         showtimes.emplace_back(movies[1], theaters[0], "07:00 PM", "2025-12-15"); 
-        showtimes.emplace_back(movies[4], theaters[1], "04:00 PM", "2025-12-15"); // Pune
-        showtimes.emplace_back(movies[5], theaters[1], "09:30 PM", "2025-12-15"); // Pune (New Time)
-        showtimes.emplace_back(movies[5], theaters[2], "01:00 PM", "2025-12-16"); // Nagpur
+        showtimes.emplace_back(movies[4], theaters[1], "04:00 PM", "2025-12-15");
+        showtimes.emplace_back(movies[5], theaters[1], "09:30 PM", "2025-12-15"); 
+        showtimes.emplace_back(movies[5], theaters[2], "01:00 PM", "2025-12-16"); 
 
-        // Karnataka
-        showtimes.emplace_back(movies[2], theaters[3], "11:00 AM", "2025-12-16"); // Bangalore
+   
+        showtimes.emplace_back(movies[2], theaters[3], "11:00 AM", "2025-12-16");
         showtimes.emplace_back(movies[0], theaters[3], "05:00 PM", "2025-12-16"); 
-        showtimes.emplace_back(movies[1], theaters[4], "09:00 PM", "2025-12-16"); // Mysore
-        showtimes.emplace_back(movies[3], theaters[4], "02:00 PM", "2025-12-16"); // Mysore (New Movie)
+        showtimes.emplace_back(movies[1], theaters[4], "09:00 PM", "2025-12-16");
+        showtimes.emplace_back(movies[3], theaters[4], "02:00 PM", "2025-12-16"); 
 
 
-        // Delhi NCR
-        showtimes.emplace_back(movies[3], theaters[5], "02:00 PM", "2025-12-17"); // New Delhi
-        showtimes.emplace_back(movies[5], theaters[6], "06:00 PM", "2025-12-17"); // Gurugram
-        showtimes.emplace_back(movies[4], theaters[7], "08:30 PM", "2025-12-17"); // Noida
-        showtimes.emplace_back(movies[1], theaters[7], "11:00 AM", "2025-12-17"); // Noida (New Time)
+    
+        showtimes.emplace_back(movies[3], theaters[5], "02:00 PM", "2025-12-17"); 
+        showtimes.emplace_back(movies[5], theaters[6], "06:00 PM", "2025-12-17");
+        showtimes.emplace_back(movies[4], theaters[7], "08:30 PM", "2025-12-17");
+        showtimes.emplace_back(movies[1], theaters[7], "11:00 AM", "2025-12-17"); 
+     
+        showtimes.emplace_back(movies[1], theaters[8], "10:00 AM", "2025-12-18"); 
+        showtimes.emplace_back(movies[0], theaters[8], "06:45 PM", "2025-12-18"); 
+        showtimes.emplace_back(movies[2], theaters[9], "03:00 PM", "2025-12-18");
 
-        // Tamil Nadu
-        showtimes.emplace_back(movies[1], theaters[8], "10:00 AM", "2025-12-18"); // Chennai
-        showtimes.emplace_back(movies[0], theaters[8], "06:45 PM", "2025-12-18"); // Chennai (New Time)
-        showtimes.emplace_back(movies[2], theaters[9], "03:00 PM", "2025-12-18"); // Coimbatore
+       
+        showtimes.emplace_back(movies[0], theaters[10], "12:00 PM", "2025-12-19"); 
+        showtimes.emplace_back(movies[3], theaters[11], "08:00 PM", "2025-12-19");
+  
+        showtimes.emplace_back(movies[5], theaters[12], "04:30 PM", "2025-12-20");
+        showtimes.emplace_back(movies[2], theaters[13], "07:30 PM", "2025-12-20");
+        showtimes.emplace_back(movies[4], theaters[14], "01:00 PM", "2025-12-20"); 
 
-        // West Bengal
-        showtimes.emplace_back(movies[0], theaters[10], "12:00 PM", "2025-12-19"); // Kolkata
-        showtimes.emplace_back(movies[3], theaters[11], "08:00 PM", "2025-12-19"); // Siliguri
+       
+        showtimes.emplace_back(movies[0], theaters[15], "06:00 PM", "2025-12-21");
+        showtimes.emplace_back(movies[1], theaters[16], "10:00 AM", "2025-12-21");
+        showtimes.emplace_back(movies[3], theaters[17], "02:30 PM", "2025-12-21"); 
 
-        // Gujarat
-        showtimes.emplace_back(movies[5], theaters[12], "04:30 PM", "2025-12-20"); // Ahmedabad
-        showtimes.emplace_back(movies[2], theaters[13], "07:30 PM", "2025-12-20"); // Surat
-        showtimes.emplace_back(movies[4], theaters[14], "01:00 PM", "2025-12-20"); // Vadodara
-
-        // Uttar Pradesh
-        showtimes.emplace_back(movies[0], theaters[15], "06:00 PM", "2025-12-21"); // Lucknow
-        showtimes.emplace_back(movies[1], theaters[16], "10:00 AM", "2025-12-21"); // Kanpur
-        showtimes.emplace_back(movies[3], theaters[17], "02:30 PM", "2025-12-21"); // Agra
-
-        // Load persisted data after initializing all components
+  
         loadBookingData();
     }
 
-    /**
-     * @brief Saves all current bookings (including seat IDs) to a file.
-     * New Feature: Data Persistence.
-     */
+    
     void saveBookingData() const {
         ofstream outFile(BOOKING_DATA_FILE);
         if (outFile.is_open()) {
@@ -600,21 +543,17 @@ private:
                 outFile << booking.toFileString() << "\n";
             }
             outFile.close();
-            // cout << "\n[System] Booking data saved successfully." << endl; // Commented out for minimal UI change
+           
         } else {
             cout << "\n[System Error] Unable to save booking data to file: " << BOOKING_DATA_FILE << endl;
         }
     }
 
-    /**
-     * @brief Loads booking data from a file and updates the seat map statuses.
-     * New Feature: Data Persistence.
-     */
     void loadBookingData() {
         ifstream inFile(BOOKING_DATA_FILE);
         string line;
         if (!inFile.is_open()) {
-            // cout << "[System] No previous booking data found. Starting fresh." << endl; // Commented out for minimal UI change
+           
             return;
         }
 
@@ -633,7 +572,7 @@ private:
                     string uniqueShowId = parts[1];
                     string seatsString = parts[2];
 
-                    // 1. Find the corresponding Showtime
+                    
                     Showtime* foundShowtime = nullptr;
                     for (auto& show : showtimes) {
                         if (show.getUniqueShowId() == uniqueShowId) {
@@ -643,14 +582,14 @@ private:
                     }
 
                     if (foundShowtime) {
-                        // 2. Parse seat IDs
+                      
                         vector<string> bookedSeats;
                         stringstream seatSs(seatsString);
                         string seatId;
                         while (getline(seatSs, seatId, ',')) {
                             bookedSeats.push_back(seatId);
                             
-                            // 3. Update seat status in the Theater's seat map
+                          
                             Theater& theater = foundShowtime->getTheater();
                             for (auto& row : theater.getSeatMap()) {
                                 for (auto& seat : row) {
@@ -662,8 +601,7 @@ private:
                             }
                         }
 
-                        // 4. Recreate the Booking object and add to allBookings list
-                        // This uses the second Booking constructor which is now corrected.
+                       
                         allBookings.emplace_back(bookingId, *foundShowtime, bookedSeats); 
                         loadedCount++;
                     }
@@ -673,14 +611,10 @@ private:
             }
         }
         inFile.close();
-        // cout << "[System] Successfully loaded " << loadedCount << " bookings." << endl; // Commented out for minimal UI change
+       
     }
 
-    /**
-     * @brief Core logic for the Food & Beverage selection process.
-     * @param selectedTheater The theater whose menu is displayed.
-     * @return A completed FoodOrder object.
-     */
+   
     FoodOrder selectFoodItems(Theater& selectedTheater) {
         FoodOrder order;
         int foodChoice;
@@ -715,11 +649,7 @@ private:
     }
 
 
-    /**
-     * @brief Core logic for the seat selection process.
-     * @param selectedShowtime The showtime for which seats are being booked.
-     * @return A vector of selected seat IDs.
-     */
+ 
     vector<string> selectSeats(Showtime& selectedShowtime) {
         Theater& theater = selectedShowtime.getTheater();
         auto& seatMap = theater.getSeatMap();
@@ -734,10 +664,10 @@ private:
         cout << "Standard Price: Rs " << formatCurrency(TICKET_PRICE_STANDARD) 
              << " | Premium Price: Rs " << formatCurrency(TICKET_PRICE_PREMIUM) << endl;
 
-        // Selection loop
+       
         while (!done) {
             cout << LINE_SEPARATOR << endl;
-            // Display Seat Map (Improved: Re-display on every major action for clarity)
+          
             for (const auto& row : seatMap) {
                 cout << "Row " << row[0].getId()[0] << " | ";
                 for (const auto& seat : row) {
@@ -754,7 +684,7 @@ private:
                 cout << "Error reading input." << endl;
                 continue;
             }
-            // Convert to uppercase for case-insensitive comparison
+        
             transform(seatIdInput.begin(), seatIdInput.end(), seatIdInput.begin(), ::toupper);
 
             if (seatIdInput == "DONE") {
@@ -787,7 +717,7 @@ private:
                         } else {
                             cout << "Seat " << seatIdInput << " is already BOOKED (X). Select another seat." << endl;
                         }
-                        goto seat_selection_next_input; // Exit nested loops
+                        goto seat_selection_next_input; 
                     }
                 }
             }
@@ -796,14 +726,14 @@ private:
                 cout << "Invalid Seat ID: " << seatIdInput << ". Please check the map and try again." << endl;
             }
 
-            seat_selection_next_input:; // Label for the goto
+            seat_selection_next_input:; 
         }
 
-        // Finalize seat statuses (Change SELECTED to BOOKED for the actual transaction)
+      
         for (auto& row : seatMap) {
             for (auto& seat : row) {
                 if (seat.getStatus() == Seat::SELECTED) {
-                    // This change is permanent only if the Booking is finalized.
+                   
                     seat.setStatus(Seat::BOOKED); 
                 }
             }
@@ -813,10 +743,7 @@ private:
     }
 
 
-    /**
-     * @brief Handles the location (State and City) selection flow.
-     * @return The selected City string.
-     */
+  
     string selectLocation() {
         int stateChoice, cityChoice;
         string selectedState, selectedCity;
@@ -825,8 +752,7 @@ private:
         for (size_t i = 0; i < states.size(); ++i) {
             cout << "[" << i + 1 << "] " << states[i] << endl;
         }
-        
-        // State selection loop
+     
         while (true) {
             stateChoice = getValidatedIntInput("Enter State number: ");
             if (stateChoice >= 1 && stateChoice <= (int)states.size()) {
@@ -837,11 +763,11 @@ private:
             cout << "Invalid state selection." << endl;
         }
 
-        // Filter cities based on selected state
+       
         vector<string> cities;
         for (const auto& theater : theaters) {
             if (theater.getState() == selectedState) {
-                // Only add unique cities
+              
                 if (find(cities.begin(), cities.end(), theater.getCity()) == cities.end()) {
                     cities.push_back(theater.getCity());
                 }
@@ -853,7 +779,7 @@ private:
             cout << "[" << i + 1 << "] " << cities[i] << endl;
         }
 
-        // City selection loop
+      
         while (true) {
             cityChoice = getValidatedIntInput("Enter City number: ");
             if (cityChoice >= 1 && cityChoice <= (int)cities.size()) {
@@ -867,11 +793,7 @@ private:
         return selectedCity;
     }
 
-    /**
-     * @brief Handles the Theater selection flow for a given city.
-     * @param city The selected city string.
-     * @return A pointer to the selected Theater object, or nullptr if none selected.
-     */
+   
     Theater* selectTheater(const string& city) {
         vector<Theater*> cityTheaters;
         for (auto& theater : theaters) {
@@ -892,7 +814,7 @@ private:
             cout << "  [" << i + 1 << "] " << cityTheaters[i]->getName() << endl;
         }
 
-        // Theater selection loop
+       
         while (true) {
             int theaterChoice = getValidatedIntInput("Enter Theater number: ");
             if (theaterChoice >= 1 && theaterChoice <= (int)cityTheaters.size()) {
@@ -905,12 +827,7 @@ private:
     }
 
 
-    /**
-     * @brief Handles the Showtime selection flow for a specific theater.
-     * New Feature: Filter by Movie Title.
-     * @param theater The selected Theater object.
-     * @return A pointer to the selected Showtime object, or nullptr if none selected.
-     */
+ 
     Showtime* selectShowtimeForTheater(Theater& theater) {
         
         string filterMovieTitle;
@@ -926,10 +843,10 @@ private:
         }
         
         vector<Showtime*> theaterShowtimes;
-        // Filter showtimes by comparing the address of the Theater object (since it's a reference)
+        
         for (auto& show : showtimes) {
             if (&show.getTheater() == &theater) {
-                // Apply movie title filter
+               
                 if (filterMovieTitle.empty() || show.getMovie().getTitle().find(filterMovieTitle) != string::npos) {
                     theaterShowtimes.push_back(&show);
                 }
@@ -949,11 +866,11 @@ private:
         cout << "Showtimes at " << theater.getName() << ":" << endl;
         
         for (size_t i = 0; i < theaterShowtimes.size(); ++i) {
-            // Using the specialized display function for clear output
+         
             theaterShowtimes[i]->displayDetails(i + 1);
         }
         
-        // Showtime selection loop
+       
         while (true) {
             int showChoice = getValidatedIntInput("Enter Showtime number to book: ");
             if (showChoice >= 1 && showChoice <= (int)theaterShowtimes.size()) {
@@ -966,10 +883,7 @@ private:
         }
     }
 
-    /**
-     * @brief Allows users to find and cancel an existing booking.
-     * New Feature: Booking Management (Cancellation).
-     */
+   
     void cancelBooking() {
         printHeader("BOOKING CANCELLATION");
         if (allBookings.empty()) {
@@ -977,7 +891,7 @@ private:
             return;
         }
 
-        // Display a list of all current bookings for reference
+       
         cout << "Existing Bookings:" << endl;
         for (const auto& booking : allBookings) {
             booking.displayBriefDetails();
@@ -993,7 +907,7 @@ private:
         auto it = allBookings.begin();
         while (it != allBookings.end()) {
             if (it->getId() == bookingIdToCancel) {
-                // Found the booking. Perform cancellation.
+               
                 cout << "\n--- Confirmation ---" << endl;
                 cout << "Are you sure you want to cancel booking ID " << bookingIdToCancel << "? (Y/N): ";
                 char confirm;
@@ -1001,16 +915,16 @@ private:
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
                 if (toupper(confirm) == 'Y') {
-                    // 1. Update seat status in the theater
+                   
                     it->cancel(); 
 
-                    // 2. Remove the booking from the list
+                
                     it = allBookings.erase(it);
 
                     cout << "\n>> BOOKING ID " << bookingIdToCancel << " HAS BEEN SUCCESSFULLY CANCELED." << endl;
                     cout << ">> Corresponding seats are now AVAILABLE." << endl;
                     
-                    // 3. Save the updated state to file
+                   
                     saveBookingData(); 
                     return;
                 } else {
@@ -1026,22 +940,20 @@ private:
 
 
 public:
-    // Constructor (Initializes data upon creation)
+
     SystemManager() {
         initializeData();
     }
     
-    // Destructor (Ensures data is saved when the application closes)
+   
     ~SystemManager() {
         saveBookingData();
     }
 
-    /**
-     * @brief The main execution flow of the booking application.
-     */
+ 
     void runBookingProcess() {
         
-        // --- Main Menu for new features ---
+      
         while (true) {
             printHeader("MAIN MENU");
             cout << "[1] Start New Booking" << endl;
@@ -1052,7 +964,7 @@ public:
             int mainChoice = getValidatedIntInput("Enter your choice: ");
             
             if (mainChoice == 3) {
-                break; // Exit loop, destructor will save data
+                break; 
             } else if (mainChoice == 2) {
                 cancelBooking();
                 continue;
@@ -1061,10 +973,10 @@ public:
                 continue;
             }
 
-            // --- STEP 1: Location Selection (State, City) ---
+            
             string selectedCity = selectLocation();
             
-            // --- STEP 2.1: Theater Selection ---
+            
             Theater* selectedTheaterPtr = selectTheater(selectedCity);
 
             if (!selectedTheaterPtr) {
@@ -1072,7 +984,7 @@ public:
                 continue;
             }
             
-            // --- STEP 2.2: Showtime Selection for that Theater ---
+           
             Showtime* selectedShowtimePtr = selectShowtimeForTheater(*selectedTheaterPtr);
 
             if (!selectedShowtimePtr) {
@@ -1083,7 +995,7 @@ public:
             Showtime& selectedShowtime = *selectedShowtimePtr;
             Theater& selectedTheater = selectedShowtime.getTheater();
 
-            // --- STEP 3: Seat Selection ---
+          
             vector<string> bookedSeatIds = selectSeats(selectedShowtime);
 
             if (bookedSeatIds.empty()) {
@@ -1091,16 +1003,15 @@ public:
                 continue; 
             }
 
-            // --- STEP 4: Food & Beverage Selection ---
+            
             FoodOrder finalFoodOrder = selectFoodItems(selectedTheater);
 
-            // --- STEP 5: Finalize Booking and Billing ---
+           
             Booking finalBooking(selectedShowtime, bookedSeatIds, finalFoodOrder);
             finalBooking.generateBill();
 
-            // --- Record the booking and persist data ---
             allBookings.push_back(finalBooking);
-            // saveBookingData() is called in the destructor, but also here to update the file immediately
+          
             saveBookingData(); 
 
             cout << "\nPress Enter to return to the main menu...";
@@ -1109,9 +1020,9 @@ public:
     }
 };
 
-// --- Main Program Entry Point ---
+
 int main() {
-    // Set output formatting for currency
+  
     cout << fixed << setprecision(2);
     
     cout << LINE_SEPARATOR << endl;
@@ -1119,10 +1030,10 @@ int main() {
     cout << "Welcome to the world-class movie booking experience." << endl;
     cout << LINE_SEPARATOR << endl;
     
-    // Create the system manager object
+    
     SystemManager system;
 
-    // Start the application flow
+   
     system.runBookingProcess();
 
     cout << "\n" << LINE_SEPARATOR << endl;
@@ -1130,4 +1041,5 @@ int main() {
     cout << LINE_SEPARATOR << endl;
     
     return 0;
+
 }
